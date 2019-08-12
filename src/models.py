@@ -16,6 +16,8 @@ CLS_TOKEN = '[CLS]'
 SEP_TOKEN = '[SEP]'
 PAD_TOKEN = 0
 
+REDUCE_SIZE = 128
+
 
 class Row:
     def __init__(self, line):
@@ -119,8 +121,10 @@ class CredPredictor(nn.Module):
         super(CredPredictor, self).__init__()
         self.bert = BertModel(config)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
-        self.referee = nn.LSTM(2, 1)
-        self.final = nn.Linear(config.hidden_size + 1, 1)
+        self.reduce = nn.Linear(config.hidden_size, REDUCE_SIZE)
+        self.prev_recursive = nn.LSTMCell(REDUCE_SIZE + 1, REDUCE_SIZE)
+        self.aftr_recursive = nn.LSTMCell(REDUCE_SIZE + 1, REDUCE_SIZE)
+        self.referee = nn.LSTM(REDUCE_SIZE, 1)
 
     def forward(self, prev, aftr):
         # TODO: if number of sentences is too big, process would be killed
@@ -142,22 +146,25 @@ class CredPredictor(nn.Module):
         #               ('prev.labels', prev.labels.size()),
         #               ('aftr.labels', aftr.labels.size())])
 
+        prev_pooled = self.reduce(prev_pooled)
+        aftr_pooled = self.reduce(aftr_pooled)
+
         prevs = torch.cat((prev_pooled, prev.labels), 1)
         aftrs = torch.cat((aftr_pooled, aftr.labels), 1)
 
         # pretty_print([('prevs', prevs.size()),
-        #              ('aftrs', aftrs.size())])
+        #               ('aftrs', aftrs.size())])
 
-        # TODO: Should we think about the order of sentences?
-        # TODO: torch.mean() or torch.prod()?
+        prev_h = None
+        for pair_vec in prevs:
+            prev_h, _ = self.prev_recursive(pair_vec.view(1, -1))
 
-        prev_res = torch.mean(prevs, 0).view(-1, 1)
-        aftr_res = torch.mean(aftrs, 0).view(-1, 1)
+        aftr_h = None
+        for pair_vec in aftrs:
+            aftr_h, _ = self.aftr_recursive(pair_vec.view(1, -1))
 
-        out = self.referee(torch.cat((prev_res, aftr_res), 1).view(-1, 1, 2)
-                           )[0][:, -1]
-        out = self.final(out.t())
-
+        out = self.referee(torch.cat((prev_h, aftr_h), 1).view(2, 1, -1)
+                           )[0][-1]
         return out.squeeze(-1)
 
     def freeze_bert_encoder(self):

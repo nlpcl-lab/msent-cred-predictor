@@ -2,4 +2,7 @@
 *.json
 *.tsv
 *.tar
+*.pkl
+*.pyc
 res/*
+src/runs/*

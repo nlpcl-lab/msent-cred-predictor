@@ -16,7 +16,7 @@ CLS_TOKEN = '[CLS]'
 SEP_TOKEN = '[SEP]'
 PAD_TOKEN = 0
 
-REDUCE_SIZE = 128
+REDUCE_SIZE = 512
 
 
 class Row:
@@ -124,7 +124,9 @@ class CredPredictor(nn.Module):
         self.reduce = nn.Linear(config.hidden_size, REDUCE_SIZE)
         self.prev_recursive = nn.LSTMCell(REDUCE_SIZE + 1, REDUCE_SIZE)
         self.aftr_recursive = nn.LSTMCell(REDUCE_SIZE + 1, REDUCE_SIZE)
-        self.referee = nn.LSTM(REDUCE_SIZE, 1)
+        self.fc1 = nn.Linear(REDUCE_SIZE, int(REDUCE_SIZE / 2))
+        self.fc2 = nn.Linear(int(REDUCE_SIZE / 2), 1)
+        self.referee = nn.Linear(2, 1)
 
     def forward(self, prev, aftr):
         # TODO: if number of sentences is too big, process would be killed
@@ -163,8 +165,10 @@ class CredPredictor(nn.Module):
         for pair_vec in aftrs:
             aftr_h, _ = self.aftr_recursive(pair_vec.view(1, -1))
 
-        out = self.referee(torch.cat((prev_h, aftr_h), 1).view(2, 1, -1)
-                           )[0][-1]
+        prev_feat = self.fc2(F.relu(self.fc1(prev_h)))
+        aftr_feat = self.fc2(F.relu(self.fc1(aftr_h)))
+
+        out = self.referee(torch.cat((prev_feat, aftr_feat), 1))
         return out.squeeze(-1)
 
     def freeze_bert_encoder(self):

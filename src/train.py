@@ -74,6 +74,8 @@ if __name__ == '__main__':
     model = models.CredPredictor(config)
     model.to(device)
     optim = torch.optim.Adam(model.parameters(), lr=args.lr)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optim, factor=0.1, patience=10, threshold=1e-4)
     model.zero_grad()
 
     if args.log:
@@ -102,6 +104,7 @@ if __name__ == '__main__':
                 out.backward()
                 optim.step()
             loss_per_doc /= div
+            scheduler.step(loss_per_doc)
 
             if args.log:
                 tb_writer.add_scalar('loss', loss_per_doc,
@@ -147,6 +150,6 @@ if __name__ == '__main__':
 
                 f.write('%d\t%d\t%f\t%f\n' % (docid, sid, out, label))
 
-            mape = mape * 100 / div
+        mape = mape * 100 / div
         logger.info('\nMean Absolute Percentage Error: %f' % mape)
         f.close()

@@ -67,7 +67,7 @@ if __name__ == '__main__':
         'cuda' if args.cuda and torch.cuda.is_available() else 'cpu')
     print(args.cuda, torch.cuda.is_available(), device)
 
-    loss = torch.nn.MSELoss()
+    loss = torch.nn.SmoothL1Loss()
 
     config = BertConfig.from_pretrained(args.bert_type)
 

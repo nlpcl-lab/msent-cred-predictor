@@ -8,7 +8,7 @@ from torch.utils.data import Dataset
 from pytorch_transformers import (WEIGHTS_NAME, BertModel, BertTokenizer)
 from utils import (truncate_seq_pair, pretty_print)
 
-TEST_IDX = 2
+TEST_IDX = 8
 MAX_SENTENCE_LENGTH = 256
 spacy.load('en')
 
@@ -16,7 +16,7 @@ CLS_TOKEN = '[CLS]'
 SEP_TOKEN = '[SEP]'
 PAD_TOKEN = 0
 
-REDUCE_SIZE = 512
+REDUCE_SIZE = 378
 
 
 class Row:
@@ -139,8 +139,8 @@ class CredPredictor(nn.Module):
             aftr.token_type_ids,
             aftr.attention_mask)
 
-        prev_pooled = self.dropout(prev_pooled)
-        aftr_pooled = self.dropout(aftr_pooled)
+        # prev_pooled = self.dropout(prev_pooled)
+        # aftr_pooled = self.dropout(aftr_pooled)
 
         # print('\n\n')
         # pretty_print([('prev_pooled', prev_pooled.size()),
@@ -158,12 +158,22 @@ class CredPredictor(nn.Module):
         #               ('aftrs', aftrs.size())])
 
         prev_h = None
-        for pair_vec in prevs:
-            prev_h, _ = self.prev_recursive(pair_vec.view(1, -1))
+        cx = None
+
+        for i, pair_vec in enumerate(prevs):
+            if i == 0:
+                prev_h, cx = self.prev_recursive(pair_vec.view(1, -1))
+            else:
+                prev_h, cx = self.prev_recursive(
+                    pair_vec.view(1, -1), (prev_h, cx))
 
         aftr_h = None
-        for pair_vec in aftrs:
-            aftr_h, _ = self.aftr_recursive(pair_vec.view(1, -1))
+        for i, pair_vec in enumerate(aftrs):
+            if i == 0:
+                aftr_h, cx = self.aftr_recursive(pair_vec.view(1, -1))
+            else:
+                aftr_h, cx = self.aftr_recursive(
+                    pair_vec.view(1, -1), (aftr_h, cx))
 
         prev_feat = self.fc2(F.relu(self.fc1(prev_h)))
         aftr_feat = self.fc2(F.relu(self.fc1(aftr_h)))

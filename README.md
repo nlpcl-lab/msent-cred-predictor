@@ -15,3 +15,9 @@ python -m spacy download en
 pip install tensorboardX
 pip install pytorch_transformers
 ```
+
+## Details for each folder
+
+- [`cache`](./cache/README.md)
+- [`data`](./data/README.md)
+- [`src`](./src/README.md)

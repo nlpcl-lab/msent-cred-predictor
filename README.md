@@ -17,7 +17,7 @@ pip install tensorboardX
 pip install pytorch_transformers
 ```
 
-It is not easy to provide the requirements in pip-installable file format (like `requirements.txt`) because of the module spaCy.
+It is not easy to provide the requirements in pip-installable file format (like `requirements.txt`) because of the module _spaCy_.
 
 After installation, place a json file in `data` folder which contains full data of credon.
 

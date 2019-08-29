@@ -72,6 +72,7 @@ if __name__ == '__main__':
     config = BertConfig.from_pretrained(args.bert_type)
 
     model = models.CredPredictor(config)
+    model.unfreeze_bert_encoder()
     model.to(device)
     optim = torch.optim.Adam(model.parameters(), lr=args.lr)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(

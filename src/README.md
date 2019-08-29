@@ -11,7 +11,7 @@ Options:
 
 - `--data`: a path to the data file. Default: `../data/credon.json`, str
 
-Example:L
+Example:
 
 ```bash
 python parser.py --data=../data/credon.json
@@ -20,6 +20,8 @@ python parser.py --data=../data/credon.json
 ## train.py
 
 The main file trains the model by the training set, also tests the accuracy with the test set.
+After training, the result file `res.tsv` will be created during the test.
+Each row in the file contains four items: document id, sentence id, prediction, and the label.
 
 options:
 
@@ -28,7 +30,7 @@ options:
 - `--lr`: Learning rate. Default: `2e-5`, float
 - `--bert_type`: A name of the bert model we use for sentence embedding. Default: `bert-base-multilingual-cased`, str
 - `--cuda`: A T/F parameter for using CUDA(GPU). Default: `False`, bool
-- `--log`: A T/F parameter for logging for _tensorboard_. Default: `False`, bool
+- `--log`: A T/F parameter for logging for _tensorboard_. The results will be saved in `runs` folder. Default: `False`, bool
 
 ## models.py
 

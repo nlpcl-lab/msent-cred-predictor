@@ -34,7 +34,3 @@ cd src
 python parser.py --data=../data/credon.json
 python train.py --docs=../data/docs --epoch=4 --cuda --log
 ```
-
-## Contributors
-
-- [Junseop](https://github.com/gaonnr)
